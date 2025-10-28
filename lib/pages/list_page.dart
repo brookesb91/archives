@@ -17,83 +17,76 @@ class ListPage extends StatefulWidget {
 }
 
 class _ListPageState extends State<ListPage> {
-  List<WoWCard> _cards = [];
-
-  @override
-  void initState() {
-    super.initState();
-    _load();
-  }
-
-  void _load() {
-    widget.database.list(widget.list.id).then((value) {
-      if (context.mounted) {
-        setState(() => _cards = value);
-      }
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(widget.list.name)),
-      body: CustomScrollView(
-        slivers: [
-          SliverList.list(
-            children: [
-              for (final card in _cards)
-                CardListItem(
-                  card: card,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => CardPage(card: card),
+      body: FutureBuilder<List<WoWCard>>(
+        future: widget.database.list(widget.list.id),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            final cards = snapshot.data!;
+            return CustomScrollView(
+              slivers: [
+                SliverList.list(
+                  children: [
+                    for (final card in cards)
+                      CardListItem(
+                        card: card,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (context) => CardPage(card: card),
+                            ),
+                          );
+                        },
+                        onLongPress: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) => AlertDialog(
+                              title: Text('Remove from List'),
+                              content: Text(
+                                'Are you sure you want to remove this card from this list?',
+                              ),
+                              actions: [
+                                TextButton(
+                                  onPressed: () => Navigator.pop(context),
+                                  child: Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    widget.database
+                                        .removeFromList(widget.list.id, card.id)
+                                        .then((value) {
+                                          if (context.mounted) {
+                                            setState(() {});
+                                            Navigator.pop(context);
+                                            ScaffoldMessenger.of(
+                                              context,
+                                            ).showSnackBar(
+                                              SnackBar(
+                                                content: Text(
+                                                  'Card removed from list.',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                        });
+                                  },
+                                  child: Text('Remove'),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
-                  onLongPress: () {
-                    showDialog(
-                      context: context,
-                      builder: (context) => AlertDialog(
-                        title: Text('Remove from List'),
-                        content: Text(
-                          'Are you sure you want to remove this card from this list?',
-                        ),
-                        actions: [
-                          TextButton(
-                            onPressed: () => Navigator.pop(context),
-                            child: Text('Cancel'),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              widget.database
-                                  .removeFromList(widget.list.id, card.id)
-                                  .then((value) {
-                                    if (context.mounted) {
-                                      setState(() {});
-                                      Navigator.pop(context);
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Card removed from list',
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                  });
-                            },
-                            child: Text('Remove'),
-                          ),
-                        ],
-                      ),
-                    );
-                  },
+                  ],
                 ),
-            ],
-          ),
-        ],
+              ],
+            );
+          }
+          return const Center(child: CircularProgressIndicator());
+        },
       ),
     );
   }
