@@ -51,6 +51,45 @@ class _ListPageState extends State<ListPage> {
                       ),
                     );
                   },
+                  onLongPress: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Remove from List'),
+                        content: Text(
+                          'Are you sure you want to remove this card from this list?',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              widget.database
+                                  .removeFromList(widget.list.id, card.id)
+                                  .then((value) {
+                                    if (context.mounted) {
+                                      setState(() {});
+                                      Navigator.pop(context);
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Card removed from list',
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                  });
+                            },
+                            child: Text('Remove'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
             ],
           ),
