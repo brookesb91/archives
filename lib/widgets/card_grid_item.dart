@@ -4,9 +4,15 @@ import '../models/wow_card.dart';
 
 class CardGridItem extends StatelessWidget {
   final WoWCard card;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
-  const CardGridItem({super.key, required this.card, required this.onTap});
+  const CardGridItem({
+    super.key,
+    required this.card,
+    this.onTap,
+    this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -30,7 +36,7 @@ class CardGridItem extends StatelessWidget {
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       clipBehavior: Clip.hardEdge,
-      child: InkWell(onTap: onTap, child: image),
+      child: InkWell(onTap: onTap, onLongPress: onLongPress, child: image),
     );
   }
 }

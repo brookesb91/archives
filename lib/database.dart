@@ -6,12 +6,14 @@ import 'package:path/path.dart';
 
 import 'models/wow_set.dart';
 import 'models/wow_card.dart';
+import 'models/wow_card_list.dart';
 
 class WoWDatabase {
   static Future<void> onCreate(Database db, int version) async {
     await db.execute(
       'CREATE TABLE wow_sets (id TEXT PRIMARY KEY, name TEXT, block INTEGER)',
     );
+
     await db.execute("""CREATE TABLE wow_cards (
       id INTEGER PRIMARY KEY,
       name TEXT, type TEXT,
@@ -29,6 +31,17 @@ class WoWDatabase {
       version TEXT,
       artist TEXT,
       flavour TEXT
+    )""");
+
+    await db.execute("""CREATE TABLE wow_card_lists (
+      id INTEGER PRIMARY KEY,
+      name TEXT
+    )""");
+
+    await db.execute("""CREATE TABLE wow_card_lists_cards (
+      list_id INTEGER,
+      card_id INTEGER,
+      PRIMARY KEY (list_id, card_id)
     )""");
 
     await seed(db);
@@ -106,5 +119,57 @@ class WoWDatabase {
           orderBy: orderBy,
         )
         .then((value) => value.map((e) => WoWCard.fromDb(e)).toList());
+  }
+
+  Future<List<WoWCardList>> lists() {
+    return db
+        .query('wow_card_lists', orderBy: 'name ASC')
+        .then((value) => value.map((e) => WoWCardList.fromDb(e)).toList());
+  }
+
+  Future<List<WoWCard>> list(int id) {
+    return db
+        .rawQuery(
+          'SELECT * FROM wow_cards WHERE id IN (SELECT card_id FROM wow_card_lists_cards WHERE list_id = ?)',
+          [id],
+        )
+        .then((value) => value.map((e) => WoWCard.fromDb(e)).toList());
+  }
+
+  Future<void> addToList(int listId, int cardId) {
+    return db.transaction((txn) async {
+      await txn.delete(
+        'wow_card_lists_cards',
+        where: 'list_id = ? AND card_id = ?',
+        whereArgs: [listId, cardId],
+      );
+      await txn.insert('wow_card_lists_cards', {
+        'list_id': listId,
+        'card_id': cardId,
+      });
+    });
+  }
+
+  Future<void> removeFromList(int listId, int cardId) {
+    return db.delete(
+      'wow_card_lists_cards',
+      where: 'list_id = ? AND card_id = ?',
+      whereArgs: [listId, cardId],
+    );
+  }
+
+  Future<int> addList(String name) {
+    return db.insert('wow_card_lists', {'name': name});
+  }
+
+  Future<void> deleteList(int id) {
+    return db.transaction((txn) async {
+      await txn.delete(
+        'wow_card_lists_cards',
+        where: 'list_id = ?',
+        whereArgs: [id],
+      );
+      await txn.delete('wow_card_lists', where: 'id = ?', whereArgs: [id]);
+    });
   }
 }

@@ -1,3 +1,4 @@
+import 'package:archives/models/wow_card_list.dart';
 import 'package:flutter/material.dart';
 
 import '../database.dart';
@@ -70,7 +71,6 @@ class _CardsPageState extends State<CardsPage> {
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
-            floating: true,
             pinned: true,
             centerTitle: false,
             title: Image.asset('icons/icon.png', width: 32, height: 32),
@@ -177,6 +177,7 @@ class _CardsPageState extends State<CardsPage> {
                   return CardGridItem(
                     card: card,
                     onTap: () => _navigate(context, card),
+                    onLongPress: () => _showListBottomSheet(context, card),
                   );
                 },
               ),
@@ -188,11 +189,55 @@ class _CardsPageState extends State<CardsPage> {
                 return CardListItem(
                   card: card,
                   onTap: () => _navigate(context, card),
+                  onLongPress: () => _showListBottomSheet(context, card),
                 );
               },
             ),
           },
         ],
+      ),
+    );
+  }
+
+  Future<void> _showListBottomSheet(BuildContext context, WoWCard card) {
+    return showModalBottomSheet(
+      context: context,
+      showDragHandle: true,
+      builder: (context) => FutureBuilder<List<WoWCardList>>(
+        future: widget.database.lists(),
+        builder: (context, snapshot) {
+          return CustomScrollView(
+            slivers: [
+              SliverAppBar(title: Text('Add to List')),
+              if (snapshot.hasData)
+                SliverList.builder(
+                  itemCount: snapshot.data!.length,
+                  itemBuilder: (context, index) {
+                    final list = snapshot.data![index];
+                    return ListTile(
+                      title: Text(
+                        list.name,
+                        style: TextStyle(fontFamily: 'Belwe-Bold'),
+                      ),
+                      trailing: Icon(Icons.add),
+                      onTap: () => widget.database
+                          .addToList(list.id, card.id)
+                          .then((value) {
+                            if (context.mounted) {
+                              Navigator.pop(context);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Card added to ${list.name}'),
+                                ),
+                              );
+                            }
+                          }),
+                    );
+                  },
+                ),
+            ],
+          );
+        },
       ),
     );
   }

@@ -4,9 +4,15 @@ import '../models/wow_card.dart';
 
 class CardListItem extends StatelessWidget {
   final WoWCard card;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
 
-  const CardListItem({super.key, required this.card, required this.onTap});
+  const CardListItem({
+    super.key,
+    required this.card,
+    this.onTap,
+    this.onLongPress,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -56,6 +62,7 @@ class CardListItem extends StatelessWidget {
         subtitle: Text(card.setname),
         leading: AspectRatio(aspectRatio: 250 / 350, child: image),
         onTap: onTap,
+        onLongPress: onLongPress,
       ),
     );
   }
