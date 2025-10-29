@@ -67,71 +67,81 @@ class _ListsPageState extends State<ListsPage> {
         future: widget.database.lists(),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
+            final lists = snapshot.data!;
             return CustomScrollView(
               slivers: [
                 SliverAppBar(title: Text('Lists')),
-                SliverList.list(
-                  children: [
-                    for (final list in snapshot.data!)
-                      ListTile(
-                        title: Text(
-                          list.name,
-                          style: TextStyle(fontFamily: 'Belwe-Bold'),
-                        ),
-                        trailing: IconButton(
-                          onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (context) => AlertDialog(
-                                title: Text('Delete List'),
-                                content: Text(
-                                  'Are you sure you want to delete this list?',
+                if (lists.isNotEmpty)
+                  SliverList.list(
+                    children: [
+                      for (final list in lists)
+                        ListTile(
+                          title: Text(
+                            list.name,
+                            style: TextStyle(fontFamily: 'Belwe-Bold'),
+                          ),
+                          trailing: IconButton(
+                            onPressed: () {
+                              showDialog(
+                                context: context,
+                                builder: (context) => AlertDialog(
+                                  title: Text('Delete List'),
+                                  content: Text(
+                                    'Are you sure you want to delete this list?',
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(context),
+                                      child: Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () {
+                                        widget.database
+                                            .deleteList(list.id)
+                                            .then((value) {
+                                              if (context.mounted) {
+                                                setState(() {});
+                                                Navigator.pop(context);
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      'List deleted.',
+                                                    ),
+                                                  ),
+                                                );
+                                              }
+                                            });
+                                      },
+                                      child: Text('Delete'),
+                                    ),
+                                  ],
                                 ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(context),
-                                    child: Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () {
-                                      widget.database.deleteList(list.id).then((
-                                        value,
-                                      ) {
-                                        if (context.mounted) {
-                                          setState(() {});
-                                          Navigator.pop(context);
-                                          ScaffoldMessenger.of(
-                                            context,
-                                          ).showSnackBar(
-                                            SnackBar(
-                                              content: Text('List deleted.'),
-                                            ),
-                                          );
-                                        }
-                                      });
-                                    },
-                                    child: Text('Delete'),
-                                  ),
-                                ],
+                              );
+                            },
+                            icon: Icon(Icons.delete),
+                          ),
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => ListPage(
+                                  list: list,
+                                  database: widget.database,
+                                ),
                               ),
                             );
                           },
-                          icon: Icon(Icons.delete),
                         ),
-                        onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => ListPage(
-                                list: list,
-                                database: widget.database,
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                  ],
-                ),
+                    ],
+                  )
+                else
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Text('You haven\'t created any lists yet.'),
+                    ),
+                  ),
               ],
             );
           }

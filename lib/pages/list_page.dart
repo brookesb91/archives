@@ -28,60 +28,72 @@ class _ListPageState extends State<ListPage> {
             final cards = snapshot.data!;
             return CustomScrollView(
               slivers: [
-                SliverList.list(
-                  children: [
-                    for (final card in cards)
-                      CardListItem(
-                        card: card,
-                        onTap: () {
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (context) => CardPage(card: card),
-                            ),
-                          );
-                        },
-                        onLongPress: () {
-                          showDialog(
-                            context: context,
-                            builder: (context) => AlertDialog(
-                              title: Text('Remove from List'),
-                              content: Text(
-                                'Are you sure you want to remove this card from this list?',
+                if (cards.isNotEmpty)
+                  SliverList.list(
+                    children: [
+                      for (final card in cards)
+                        CardListItem(
+                          card: card,
+                          onTap: () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (context) => CardPage(card: card),
                               ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(context),
-                                  child: Text('Cancel'),
+                            );
+                          },
+                          onLongPress: () {
+                            showDialog(
+                              context: context,
+                              builder: (context) => AlertDialog(
+                                title: Text('Remove from List'),
+                                content: Text(
+                                  'Are you sure you want to remove this card from this list?',
                                 ),
-                                TextButton(
-                                  onPressed: () {
-                                    widget.database
-                                        .removeFromList(widget.list.id, card.id)
-                                        .then((value) {
-                                          if (context.mounted) {
-                                            setState(() {});
-                                            Navigator.pop(context);
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                  'Card removed from list.',
+                                actions: [
+                                  TextButton(
+                                    onPressed: () => Navigator.pop(context),
+                                    child: Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () {
+                                      widget.database
+                                          .removeFromList(
+                                            widget.list.id,
+                                            card.id,
+                                          )
+                                          .then((value) {
+                                            if (context.mounted) {
+                                              setState(() {});
+                                              Navigator.pop(context);
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    'Card removed from list.',
+                                                  ),
                                                 ),
-                                              ),
-                                            );
-                                          }
-                                        });
-                                  },
-                                  child: Text('Remove'),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
+                                              );
+                                            }
+                                          });
+                                    },
+                                    child: Text('Remove'),
+                                  ),
+                                ],
+                              ),
+                            );
+                          },
+                        ),
+                    ],
+                  )
+                else
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Text(
+                        'You haven\'t added any cards to this list yet...',
                       ),
-                  ],
-                ),
+                    ),
+                  ),
               ],
             );
           }

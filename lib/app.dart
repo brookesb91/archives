@@ -15,6 +15,7 @@ class App extends StatelessWidget {
       title: 'Archives',
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
+      debugShowCheckedModeBanner: false,
       routes: {'/': (context) => HomePage(database: database)},
     );
   }

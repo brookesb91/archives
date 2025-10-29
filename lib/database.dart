@@ -1,7 +1,6 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
-import 'package:flutter/foundation.dart';
 import 'package:path/path.dart';
 
 import 'models/wow_set.dart';
@@ -24,7 +23,7 @@ class WoWDatabase {
       rules TEXT,
       rarity TEXT,
       cost INTEGER,
-      instant BOOLEAN,
+      instant INTEGER,
       subtype TEXT,
       block INTEGER,
       image TEXT,
@@ -39,9 +38,11 @@ class WoWDatabase {
     )""");
 
     await db.execute("""CREATE TABLE wow_card_lists_cards (
+      id INTEGER PRIMARY KEY,
       list_id INTEGER,
       card_id INTEGER,
-      PRIMARY KEY (list_id, card_id)
+      FOREIGN KEY (list_id) REFERENCES wow_card_lists(id),
+      FOREIGN KEY (card_id) REFERENCES wow_cards(id)
     )""");
 
     await seed(db);
@@ -50,7 +51,6 @@ class WoWDatabase {
   static Future<void> seed(Database db) async {
     final sets = jsonDecode(await rootBundle.loadString('data/setlist.json'));
     for (final set in sets.entries) {
-      debugPrint('Seeding set ${set.value['setname']}');
       await db.insert('wow_sets', {
         'id': set.key,
         'name': set.value['setname'],
@@ -62,7 +62,6 @@ class WoWDatabase {
       );
 
       for (final card in cards) {
-        debugPrint('Seeding card ${card['name']}');
         await db.insert('wow_cards', {
           'id': card['cardid'],
           'name': card['name'],
@@ -74,7 +73,7 @@ class WoWDatabase {
           'rules': card['rules'],
           'rarity': card['rarity'],
           'cost': card['cost'],
-          'instant': card.containsKey('instant'),
+          'instant': card.containsKey('instant') ? 1 : 0,
           'subtype': card['subtype'],
           'block': card['block'],
           'image': card['image'],
@@ -138,11 +137,6 @@ class WoWDatabase {
 
   Future<void> addToList(int listId, int cardId) {
     return db.transaction((txn) async {
-      await txn.delete(
-        'wow_card_lists_cards',
-        where: 'list_id = ? AND card_id = ?',
-        whereArgs: [listId, cardId],
-      );
       await txn.insert('wow_card_lists_cards', {
         'list_id': listId,
         'card_id': cardId,
