@@ -61,7 +61,9 @@ class _CardsPageState extends State<CardsPage> {
   void _navigate(BuildContext context, WoWCard card) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => CardPage(card: card)),
+      MaterialPageRoute(
+        builder: (context) => CardPage(card: card, database: widget.database),
+      ),
     );
   }
 

@@ -109,6 +109,7 @@ class WoWDatabase {
     String? where,
     List<String>? whereArgs,
     String? orderBy,
+    int? limit,
   }) {
     return db
         .query(
@@ -116,6 +117,7 @@ class WoWDatabase {
           where: where,
           whereArgs: whereArgs,
           orderBy: orderBy,
+          limit: limit,
         )
         .then((value) => value.map((e) => WoWCard.fromDb(e)).toList());
   }

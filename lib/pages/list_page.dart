@@ -37,7 +37,10 @@ class _ListPageState extends State<ListPage> {
                           onTap: () {
                             Navigator.of(context).push(
                               MaterialPageRoute(
-                                builder: (context) => CardPage(card: card),
+                                builder: (context) => CardPage(
+                                  card: card,
+                                  database: widget.database,
+                                ),
                               ),
                             );
                           },
